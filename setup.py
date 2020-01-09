@@ -19,7 +19,7 @@ classifiers = (
 setup(
     name="pystiche_replication",
     description="Replication of prominent NST papers in pystiche",
-    version="0.1dev",
+    version="0.1",
     url="https://github.com/pmeier/pystiche_replication",
     license="BSD-3",
     author="Philip Meier",
