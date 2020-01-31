@@ -1,7 +1,5 @@
 from os import path
 import torch
-import pystiche
-from pystiche.image import read_image, write_image
 from pystiche.image.transforms.functional import (
     resize,
     rgb_to_yuv,
@@ -10,11 +8,9 @@ from pystiche.image.transforms.functional import (
     grayscale_to_fakegrayscale,
     transform_channels_affinely,
 )
-from pystiche.papers import (
-    GatysEtAl2017NSTPyramid,
-    GatysEtAl2017SpatialControlNSTPyramid,
-)
 from pystiche.cuda import abort_if_cuda_memory_exausts
+from pystiche_replication.utils import read_image, read_guides, write_image
+from pystiche_replication import gatys_et_al_2017_nst, gatys_et_al_2017_guided_nst
 import utils
 
 
@@ -27,65 +23,13 @@ def display_saving_info(output_file):
     print(f"Saving result to {output_file}")
 
 
-def perform_nst(content_image, style_image, impl_params, device):
-    nst_pyramid = GatysEtAl2017NSTPyramid(impl_params).to(device)
-
-    content_image = nst_pyramid.max_resize(content_image)
-    style_image = nst_pyramid.max_resize(style_image)
-
-    utils.make_reproducible()
-    input_image = utils.get_input_image("content", content_image=content_image)
-
-    nst = nst_pyramid.image_optimizer
-    nst.content_loss.set_target(content_image)
-    nst.style_loss.set_target(style_image)
-
-    return nst_pyramid(input_image, quiet=True)[-1]
-
-
 def figure_2(source_folder, guides_root, replication_folder, device, impl_params):
-    def perform_guided_nst(
-        content_image,
-        content_guides,
-        style_images,
-        style_guides,
-        guide_names,
-        impl_params,
-        device,
-    ):
-        nst_pyramid = GatysEtAl2017SpatialControlNSTPyramid(
-            len(guide_names), impl_params, guide_names
-        )
-        nst_pyramid = nst_pyramid.to(device)
-
-        content_image = nst_pyramid.max_resize(content_image)
-        style_images = [nst_pyramid.max_resize(image) for image in style_images]
-
-        content_guides = [
-            nst_pyramid.max_resize(guide, binarize=True) for guide in content_guides
-        ]
-        style_guides = [
-            nst_pyramid.max_resize(guide, binarize=True) for guide in style_guides
-        ]
-
-        utils.make_reproducible()
-        input_image = utils.get_input_image("content", content_image=content_image)
-
-        nst = nst_pyramid.image_optimizer
-        nst.content_loss.set_target(content_image)
-        for style_loss, content_guide, style_guide, style_image in zip(
-            nst.style_losses, content_guides, style_guides, style_images
-        ):
-            style_loss.set_input_guide(content_guide)
-            style_loss.set_target_guide(style_guide)
-            style_loss.set_target(style_image)
-
-        return nst_pyramid(input_image, quiet=True)[-1]
-
     @abort_if_cuda_memory_exausts
     def figure_2_d(content_image, style_image):
         display_replication_info("Figure 2 (d)", impl_params)
-        output_image = perform_nst(content_image, style_image, impl_params, device)
+        output_image = gatys_et_al_2017_nst(
+            content_image, style_image, impl_params=impl_params, quiet=True
+        )
 
         output_file = path.join(replication_folder, "fig_2__d.jpg")
         display_saving_info(output_file)
@@ -102,21 +46,19 @@ def figure_2(source_folder, guides_root, replication_folder, device, impl_params
         style_sky_image,
         style_sky_guide,
     ):
-        guide_names = ("house", "sky")
-
-        content_guides = (content_house_guide, content_sky_guide)
-        style_images = (style_house_image, style_sky_image)
-        style_guides = (style_house_guide, style_sky_guide)
+        content_guides = {"house": content_house_guide, "sky": content_sky_guide}
+        style_images_and_guides = {
+            "house": (style_house_image, style_house_guide),
+            "sky": (style_sky_image, style_sky_guide),
+        }
 
         display_replication_info(f"Figure 2 ({label})", impl_params)
-        output_image = perform_guided_nst(
+        output_image = gatys_et_al_2017_guided_nst(
             content_image,
             content_guides,
-            style_images,
-            style_guides,
-            guide_names,
-            impl_params,
-            device,
+            style_images_and_guides,
+            impl_params=impl_params,
+            quiet=True,
         )
 
         output_file = path.join(replication_folder, "fig_2__{}.jpg".format(label))
@@ -124,18 +66,18 @@ def figure_2(source_folder, guides_root, replication_folder, device, impl_params
         write_image(output_image, output_file)
 
     content_file = path.join(source_folder, "house_concept_tillamook.jpg")
-    content_image = read_image(content_file).to(device)
-    content_guides = utils.read_guides(guides_root, content_file, device)
+    content_image = read_image(content_file, device=device)
+    content_guides = read_guides(guides_root, content_file, device)
 
     style1_file = path.join(source_folder, "watertown.jpg")
-    style1_image = read_image(style1_file).to(device)
-    style1_guides = utils.read_guides(guides_root, style1_file, device)
+    style1_image = read_image(style1_file, device=device)
+    style1_guides = read_guides(guides_root, style1_file, device)
 
     style2_file = path.join(source_folder, "van_gogh__wheat_field_with_cypresses.jpg")
-    style2_image = read_image(style2_file).to(device)
-    style2_guides = utils.read_guides(guides_root, style2_file, device)
+    style2_image = read_image(style2_file, device=device)
+    style2_guides = read_guides(guides_root, style2_file, device)
 
-    figure_2_d(content_image, style1_image)
+    # figure_2_d(content_image, style1_image)
 
     figure_2_ef(
         "e",
@@ -173,15 +115,17 @@ def figure_3(source_folder, replication_folder, device, impl_params):
 
         return mean, cov
 
+    def msqrt(x):
+        e, v = torch.symeig(x, eigenvectors=True)
+        return torch.chain_matmul(v, torch.diag(e), v.t())
+
     def match_channelwise_statistics(input, target, method):
         input_mean, input_cov = calculate_channelwise_mean_covariance(input)
         target_mean, target_cov = calculate_channelwise_mean_covariance(target)
 
         input_cov, target_cov = [cov.squeeze(0) for cov in (input_cov, target_cov)]
         if method == "image_analogies":
-            matrix = torch.mm(
-                pystiche.msqrt(target_cov), torch.inverse(pystiche.msqrt(input_cov))
-            )
+            matrix = torch.mm(msqrt(target_cov), torch.inverse(msqrt(input_cov)))
         elif method == "cholesky":
             matrix = torch.mm(
                 torch.cholesky(target_cov), torch.inverse(torch.cholesky(input_cov))
@@ -198,7 +142,9 @@ def figure_3(source_folder, replication_folder, device, impl_params):
     @abort_if_cuda_memory_exausts
     def figure_3_c(content_image, style_image):
         display_replication_info("Figure 3 (c)", impl_params)
-        output_image = perform_nst(content_image, style_image, impl_params, device)
+        output_image = gatys_et_al_2017_nst(
+            content_image, style_image, impl_params=impl_params, quiet=True
+        )
 
         output_file = path.join(replication_folder, "fig_3__c.jpg")
         display_saving_info(output_file)
@@ -213,8 +159,8 @@ def figure_3(source_folder, replication_folder, device, impl_params):
         style_luminance = grayscale_to_fakegrayscale(rgb_to_grayscale(style_image))
 
         display_replication_info("Figure 3 (d)", impl_params)
-        output_luminance = perform_nst(
-            content_luminance, style_luminance, impl_params, device
+        output_luminance = gatys_et_al_2017_nst(
+            content_luminance, style_luminance, impl_params=impl_params, quiet=True
         )
         output_luminance = torch.mean(output_luminance, dim=1, keepdim=True)
         output_chromaticity = resize(content_chromaticity, output_luminance.size()[2:])
@@ -230,7 +176,9 @@ def figure_3(source_folder, replication_folder, device, impl_params):
         style_image = match_channelwise_statistics(style_image, content_image, method)
 
         display_replication_info("Figure 3 (e)", impl_params)
-        output_image = perform_nst(content_image, style_image, impl_params, device)
+        output_image = gatys_et_al_2017_nst(
+            content_image, style_image, impl_params=impl_params, quiet=True
+        )
 
         output_file = path.join(replication_folder, "fig_3__e.jpg")
         display_saving_info(output_file)
@@ -250,17 +198,15 @@ def figure_3(source_folder, replication_folder, device, impl_params):
 
 
 if __name__ == "__main__":
-    root = utils.get_pystiche_root(__file__)
-    image_root = path.join(root, "images")
     device = None
 
-    image_root = path.abspath(path.expanduser(image_root))
-    source_folder = path.join(image_root, "source")
-    guides_root = path.join(image_root, "guides")
+    images_root = utils.get_images_root()
+    source_folder = path.join(images_root, "source")
+    guides_root = path.join(images_root, "guides")
     replication_root = path.join(
-        image_root, "replication", path.splitext(path.basename(__file__))[0]
+        images_root, "results", path.splitext(path.basename(__file__))[0]
     )
-    device = utils.get_device(device)
+    device = utils.parse_device(device)
 
     utils.print_replication_info(
         title="Controlling Perceptual Factors in Neural Style Transfer",
