@@ -79,7 +79,7 @@ def default_image_pyramid_optim_loop(
             input_image = level.resize_image(input_image, aspect_ratio=aspect_ratio)
 
         input_image = default_image_optim_loop(
-            input_image, criterion, **image_optim_kwargs
+            input_image, criterion, num_steps=iter(level), **image_optim_kwargs
         )
 
     return input_image
