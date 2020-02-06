@@ -168,10 +168,10 @@ class LiWand2016MRFOperator(MRFOperator):
             return pystiche.extract_patches2d(enc, self.patch_size, self.stride)
 
     def calculate_score(self, input_repr, target_repr, ctx):
-        loss = patch_matching_loss(
+        score = patch_matching_loss(
             input_repr, target_repr, reduction=self.loss_reduction
         )
-        return self.score_correction_factor * loss
+        return score * self.score_correction_factor
 
 
 class LiWand2016StyleLoss(MultiLayerEncodingOperator):
@@ -226,7 +226,7 @@ class LiWand2016TotalVariationOperator(TotalVariationOperator):
         score = total_variation_loss(
             input_repr, exponent=self.exponent, reduction=self.loss_reduction
         )
-        return self.score_correction_factor * score
+        return score * self.score_correction_factor
 
 
 class LiWand2016Regularization(LiWand2016TotalVariationOperator):

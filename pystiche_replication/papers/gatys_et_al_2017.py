@@ -3,6 +3,7 @@ from collections import OrderedDict
 import torch
 from torch import optim
 from torch.optim.optimizer import Optimizer
+import pystiche
 from pystiche.image.transforms import CaffePreprocessing, CaffePostprocessing
 from pystiche.enc import MultiLayerEncoder, Encoder, vgg19_encoder
 from pystiche.ops import (
@@ -123,8 +124,8 @@ class _GatysEtAl2017StyleLoss(MultiLayerEncodingOperator):
             nums_channels.append(module.out_channels)
         return [1.0 / num_channels ** 2.0 for num_channels in nums_channels]
 
-    def process_input_image(self, input_image: torch.Tensor) -> torch.Tensor:
-        return self.score_correction_factor * super().process_input_image(input_image)
+    def process_input_image(self, input_image: torch.Tensor) -> pystiche.LossDict:
+        return super().process_input_image(input_image) * self.score_correction_factor
 
 
 class GatysEtAl2017StyleLoss(_GatysEtAl2017StyleLoss):

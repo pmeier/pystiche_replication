@@ -63,7 +63,7 @@ class GatysEckerBethge2015MSEEncodingOperator(MSEEncodingOperator):
 
     def calculate_score(self, input_repr, target_repr, ctx):
         loss = mse_loss(input_repr, target_repr, reduction=self.loss_reduction)
-        return self.score_correction_factor * loss
+        return loss * self.score_correction_factor
 
 
 class GatysEckerBethge2015ContentLoss(GatysEckerBethge2015MSEEncodingOperator):
@@ -135,8 +135,8 @@ class GatysEckerBethge2015StyleLoss(MultiLayerEncodingOperator):
             nums_channels.append(module.out_channels)
         return [1.0 / num_channels ** 2.0 for num_channels in nums_channels]
 
-    def process_input_image(self, input_image: torch.Tensor) -> torch.Tensor:
-        return self.score_correction_factor * super().process_input_image(input_image)
+    def process_input_image(self, input_image: torch.Tensor) -> pystiche.LossDict:
+        return super().process_input_image(input_image) * self.score_correction_factor
 
 
 class GatysEckerBethge2015PerceptualLoss(MultiOperatorLoss):
