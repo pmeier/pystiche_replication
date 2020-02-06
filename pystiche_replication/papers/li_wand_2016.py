@@ -1,5 +1,6 @@
 from typing import Any, Union, Optional, Sequence, Tuple, Dict, Callable
 from collections import OrderedDict
+import logging
 import torch
 from torch import optim
 from torch.optim.optimizer import Optimizer
@@ -16,8 +17,8 @@ from pystiche.ops import (
 from pystiche.functional import patch_matching_loss, total_variation_loss
 from pystiche.loss import MultiOperatorLoss
 from pystiche.pyramid import OctaveImagePyramid
-from ..utils import get_input_image, make_reproducible
-from ..optim import default_image_pyramid_optim_loop
+from pystiche_replication.utils import get_input_image, make_reproducible
+from pystiche_replication.optim import default_image_pyramid_optim_loop
 
 __all__ = [
     "li_wand_2016_preprocessor",
@@ -320,7 +321,7 @@ def li_wand_2016_nst(
     criterion: Optional[LiWand2016PerceptualLoss] = None,
     pyramid: Optional[LiWand2016ImagePyramid] = None,
     quiet: bool = False,
-    print_fn: Optional[Callable[[int, torch.Tensor], None]] = None,
+    logger: Optional[logging.Logger] = None,
     seed: int = None,
 ) -> torch.Tensor:
     if seed is not None:
@@ -354,5 +355,5 @@ def li_wand_2016_nst(
         preprocessor=preprocessor,
         postprocessor=postprocessor,
         quiet=quiet,
-        print_fn=print_fn,
+        logger=logger,
     )

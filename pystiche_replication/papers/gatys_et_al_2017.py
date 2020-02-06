@@ -1,5 +1,6 @@
 from typing import Union, Any, Optional, Sequence, Tuple, Dict, Callable
 from collections import OrderedDict
+import logging
 import torch
 from torch import optim
 from torch.optim.optimizer import Optimizer
@@ -311,7 +312,7 @@ def gatys_et_al_2017_nst(
     criterion: Optional[GatysEtAl2017PerceptualLoss] = None,
     pyramid: Optional[GatysEtAl2017ImagePyramid] = None,
     quiet: bool = False,
-    print_fn: Optional[Callable[[int, torch.Tensor], None]] = None,
+    logger: Optional[logging.Logger] = None,
     seed: int = None,
 ) -> torch.Tensor:
     if seed is not None:
@@ -345,7 +346,7 @@ def gatys_et_al_2017_nst(
         preprocessor=preprocessor,
         postprocessor=postprocessor,
         quiet=quiet,
-        print_fn=print_fn,
+        logger=logger,
     )
 
 
@@ -357,7 +358,7 @@ def gatys_et_al_2017_guided_nst(
     criterion: Optional[GatysEtAl2017GuidedPerceptualLoss] = None,
     pyramid: Optional[GatysEtAl2017ImagePyramid] = None,
     quiet: bool = False,
-    print_fn: Optional[Callable[[int, torch.Tensor], None]] = None,
+    logger: Optional[logging.Logger] = None,
     seed: int = None,
 ) -> torch.Tensor:
     regions = set(content_guides.keys())
@@ -411,5 +412,5 @@ def gatys_et_al_2017_guided_nst(
         preprocessor=preprocessor,
         postprocessor=postprocessor,
         quiet=quiet,
-        print_fn=print_fn,
+        logger=logger,
     )

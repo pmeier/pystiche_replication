@@ -1,4 +1,5 @@
 from os import path
+import contextlib
 import torch
 from pystiche.image.transforms.functional import (
     resize,
@@ -14,26 +15,35 @@ from pystiche_replication import gatys_et_al_2017_nst, gatys_et_al_2017_guided_n
 import utils
 
 
-def display_replication_info(figure, impl_params):
+@contextlib.contextmanager
+def replicate_figure(logger, figure, impl_params):
     params = "implementation" if impl_params else "paper"
-    print(f"Replicating {figure} with {params} parameters")
+    header = f"Replicating {figure} with {params} parameters"
+    with logger.environ(header):
+        yield
 
 
-def display_saving_info(output_file):
-    print(f"Saving result to {output_file}")
+def log_saving_info(logger, output_file):
+    logger.sep_message(f"Saving result to {output_file}", bottom=False)
 
 
-def figure_2(source_folder, guides_root, replication_folder, device, impl_params):
+def figure_2(
+    source_folder, guides_root, replication_folder, device, impl_params, logger, quiet
+):
     @abort_if_cuda_memory_exausts
     def figure_2_d(content_image, style_image):
-        display_replication_info("Figure 2 (d)", impl_params)
-        output_image = gatys_et_al_2017_nst(
-            content_image, style_image, impl_params=impl_params, quiet=True
-        )
+        with replicate_figure(logger, "2 (d)", impl_params):
+            output_image = gatys_et_al_2017_nst(
+                content_image,
+                style_image,
+                impl_params=impl_params,
+                quiet=quiet,
+                logger=logger,
+            )
 
-        output_file = path.join(replication_folder, "fig_2__d.jpg")
-        display_saving_info(output_file)
-        write_image(output_image, output_file)
+            output_file = path.join(replication_folder, "fig_2__d.jpg")
+            log_saving_info(logger, output_file)
+            write_image(output_image, output_file)
 
     @abort_if_cuda_memory_exausts
     def figure_2_ef(
@@ -51,19 +61,20 @@ def figure_2(source_folder, guides_root, replication_folder, device, impl_params
             "house": (style_house_image, style_house_guide),
             "sky": (style_sky_image, style_sky_guide),
         }
+        with replicate_figure(logger, f"2 ({label})", impl_params):
 
-        display_replication_info(f"Figure 2 ({label})", impl_params)
-        output_image = gatys_et_al_2017_guided_nst(
-            content_image,
-            content_guides,
-            style_images_and_guides,
-            impl_params=impl_params,
-            quiet=True,
-        )
+            output_image = gatys_et_al_2017_guided_nst(
+                content_image,
+                content_guides,
+                style_images_and_guides,
+                impl_params=impl_params,
+                quiet=quiet,
+                logger=logger,
+            )
 
-        output_file = path.join(replication_folder, "fig_2__{}.jpg".format(label))
-        display_saving_info(output_file)
-        write_image(output_image, output_file)
+            output_file = path.join(replication_folder, f"fig_2__{label}.jpg")
+            log_saving_info(logger, output_file)
+            write_image(output_image, output_file)
 
     content_file = path.join(source_folder, "house_concept_tillamook.jpg")
     content_image = read_image(content_file, device=device)
@@ -77,7 +88,7 @@ def figure_2(source_folder, guides_root, replication_folder, device, impl_params
     style2_image = read_image(style2_file, device=device)
     style2_guides = read_guides(guides_root, style2_file, device)
 
-    # figure_2_d(content_image, style1_image)
+    figure_2_d(content_image, style1_image)
 
     figure_2_ef(
         "e",
@@ -102,7 +113,7 @@ def figure_2(source_folder, guides_root, replication_folder, device, impl_params
     )
 
 
-def figure_3(source_folder, replication_folder, device, impl_params):
+def figure_3(source_folder, replication_folder, device, impl_params, logger, quiet):
     def calculate_channelwise_mean_covariance(image):
         batch_size, num_channels, height, width = image.size()
         num_pixels = height * width
@@ -141,14 +152,14 @@ def figure_3(source_folder, replication_folder, device, impl_params):
 
     @abort_if_cuda_memory_exausts
     def figure_3_c(content_image, style_image):
-        display_replication_info("Figure 3 (c)", impl_params)
-        output_image = gatys_et_al_2017_nst(
-            content_image, style_image, impl_params=impl_params, quiet=True
-        )
+        with replicate_figure(logger, "3 (c)", impl_params):
+            output_image = gatys_et_al_2017_nst(
+                content_image, style_image, impl_params=impl_params, quiet=True
+            )
 
-        output_file = path.join(replication_folder, "fig_3__c.jpg")
-        display_saving_info(output_file)
-        write_image(output_image, output_file)
+            output_file = path.join(replication_folder, "fig_3__c.jpg")
+            log_saving_info(logger, output_file)
+            write_image(output_image, output_file)
 
     @abort_if_cuda_memory_exausts
     def figure_3_d(content_image, style_image):
@@ -158,31 +169,33 @@ def figure_3(source_folder, replication_folder, device, impl_params):
 
         style_luminance = grayscale_to_fakegrayscale(rgb_to_grayscale(style_image))
 
-        display_replication_info("Figure 3 (d)", impl_params)
-        output_luminance = gatys_et_al_2017_nst(
-            content_luminance, style_luminance, impl_params=impl_params, quiet=True
-        )
-        output_luminance = torch.mean(output_luminance, dim=1, keepdim=True)
-        output_chromaticity = resize(content_chromaticity, output_luminance.size()[2:])
-        output_image_yuv = torch.cat((output_luminance, output_chromaticity), dim=1)
-        output_image = yuv_to_rgb(output_image_yuv)
+        with replicate_figure(logger, "3 (d)", impl_params):
+            output_luminance = gatys_et_al_2017_nst(
+                content_luminance, style_luminance, impl_params=impl_params, quiet=True
+            )
+            output_luminance = torch.mean(output_luminance, dim=1, keepdim=True)
+            output_chromaticity = resize(
+                content_chromaticity, output_luminance.size()[2:]
+            )
+            output_image_yuv = torch.cat((output_luminance, output_chromaticity), dim=1)
+            output_image = yuv_to_rgb(output_image_yuv)
 
-        output_file = path.join(replication_folder, "fig_3__d.jpg")
-        display_saving_info(output_file)
-        write_image(output_image, output_file)
+            output_file = path.join(replication_folder, "fig_3__d.jpg")
+            log_saving_info(logger, output_file)
+            write_image(output_image, output_file)
 
     @abort_if_cuda_memory_exausts
     def figure_3_e(content_image, style_image, method="cholesky"):
         style_image = match_channelwise_statistics(style_image, content_image, method)
 
-        display_replication_info("Figure 3 (e)", impl_params)
-        output_image = gatys_et_al_2017_nst(
-            content_image, style_image, impl_params=impl_params, quiet=True
-        )
+        with replicate_figure(logger, "3 (e)", impl_params):
+            output_image = gatys_et_al_2017_nst(
+                content_image, style_image, impl_params=impl_params, quiet=True
+            )
 
-        output_file = path.join(replication_folder, "fig_3__e.jpg")
-        display_saving_info(output_file)
-        write_image(output_image, output_file)
+            output_file = path.join(replication_folder, "fig_3__e.jpg")
+            log_saving_info(logger, output_file)
+            write_image(output_image, output_file)
 
     content_file = path.join(
         source_folder, "janssen__schultenhof_mettingen_bauerngarten_8.jpg"
@@ -199,6 +212,7 @@ def figure_3(source_folder, replication_folder, device, impl_params):
 
 if __name__ == "__main__":
     device = None
+    quiet = False
 
     images_root = utils.get_images_root()
     source_folder = path.join(images_root, "source")
@@ -207,19 +221,29 @@ if __name__ == "__main__":
         images_root, "results", path.splitext(path.basename(__file__))[0]
     )
     device = utils.parse_device(device)
+    logger = utils.get_default_logger()
 
-    utils.print_replication_info(
+    with utils.log_replication_info(
+        logger,
         title="Controlling Perceptual Factors in Neural Style Transfer",
         url="http://openaccess.thecvf.com/content_cvpr_2017/papers/Gatys_Controlling_Perceptual_Factors_CVPR_2017_paper.pdf",
         author="Leon Gatys et. al.",
         year=2017,
-    )
-    for impl_params in (True, False):
-        replication_folder = path.join(
-            replication_root, "implementation" if impl_params else "paper"
-        )
+    ):
+        for impl_params in (True, False):
+            replication_folder = path.join(
+                replication_root, "implementation" if impl_params else "paper"
+            )
 
-        figure_2(source_folder, guides_root, replication_folder, device, impl_params)
-        utils.print_sep_line()
-        figure_3(source_folder, replication_folder, device, impl_params)
-        utils.print_sep_line()
+            figure_2(
+                source_folder,
+                guides_root,
+                replication_folder,
+                device,
+                impl_params,
+                logger,
+                quiet,
+            )
+            figure_3(
+                source_folder, replication_folder, device, impl_params, logger, quiet
+            )

@@ -1,5 +1,6 @@
 from typing import Any, Union, Optional, Sequence, Dict, Callable
 from collections import OrderedDict
+import logging
 import torch
 from torch import optim, nn
 from torch.optim.optimizer import Optimizer
@@ -9,8 +10,8 @@ from pystiche.image.transforms import CaffePreprocessing, CaffePostprocessing
 from pystiche.enc import MultiLayerEncoder, Encoder, vgg19_encoder
 from pystiche.ops import MSEEncodingOperator, GramOperator, MultiLayerEncodingOperator
 from pystiche.loss import MultiOperatorLoss
-from ..utils import get_input_image, make_reproducible
-from ..optim import default_image_optim_loop
+from pystiche_replication.utils import get_input_image, make_reproducible
+from pystiche_replication.optim import default_image_optim_loop
 
 __all__ = [
     "gatys_ecker_bethge_2015_preprocessor",
@@ -186,7 +187,7 @@ def gatys_ecker_bethge_2015_nst(
     impl_params: bool = True,
     criterion: Optional[GatysEckerBethge2015PerceptualLoss] = None,
     quiet: bool = False,
-    print_fn: Optional[Callable[[int, torch.Tensor], None]] = None,
+    logger: Optional[logging.Logger] = None,
     seed: Optional[int] = None,
 ) -> torch.Tensor:
     if seed is not None:
@@ -214,5 +215,5 @@ def gatys_ecker_bethge_2015_nst(
         preprocessor=preprocessor,
         postprocessor=postprocessor,
         quiet=quiet,
-        print_fn=print_fn,
+        logger=logger,
     )
