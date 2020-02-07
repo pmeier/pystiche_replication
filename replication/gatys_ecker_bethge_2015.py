@@ -2,7 +2,7 @@ from os import path
 import itertools
 from pystiche.cuda import abort_if_cuda_memory_exausts
 from pystiche_replication import (
-    GatysEckerBethge2015PerceptualLoss,
+    gatys_ecker_bethge_2015_perceptual_loss,
     gatys_ecker_bethge_2015_nst,
 )
 from pystiche_replication.utils import read_image as _read_image, write_image
@@ -10,7 +10,7 @@ import utils
 
 
 # guessed
-NUM_STEPS = 1000
+NUM_STEPS = 500
 SIZE = 800
 
 
@@ -43,7 +43,7 @@ def figure_2(source_folder, replication_folder, device, impl_params, logger, qui
         with logger.environ(header):
 
             style_loss_kwargs = {"score_weight": style_image.score_weight}
-            criterion = GatysEckerBethge2015PerceptualLoss(
+            criterion = gatys_ecker_bethge_2015_perceptual_loss(
                 impl_params=impl_params, style_loss_kwargs=style_loss_kwargs
             )
 
@@ -84,7 +84,7 @@ def figure_3(source_folder, results_folder, device, impl_params, logger, quiet):
         with logger.environ(header):
 
             style_loss_kwargs = {"layers": layers, "score_weight": score_weight}
-            criterion = GatysEckerBethge2015PerceptualLoss(
+            criterion = gatys_ecker_bethge_2015_perceptual_loss(
                 impl_params=impl_params, style_loss_kwargs=style_loss_kwargs
             )
 

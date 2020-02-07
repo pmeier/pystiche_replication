@@ -6,7 +6,7 @@ import utils
 
 
 @abort_if_cuda_memory_exausts
-def figure_6(source_folder, replication_folder, device, impl_params, logger):
+def figure_6(source_folder, replication_folder, device, impl_params, logger, quiet):
     content_files = ("jeffrey_dennard.jpg", "theilr__s.jpg")
     style_files = ("picasso__self-portrait_1907.jpg", "kandinsky__composition_viii.jpg")
     locations = ("top", "bottom")
@@ -25,7 +25,7 @@ def figure_6(source_folder, replication_folder, device, impl_params, logger):
         )
         with logger.environ(header):
             output_image = li_wand_2016_nst(
-                content_image, style_image, impl_params, quiet=False, logger=logger
+                content_image, style_image, impl_params, quiet=quiet, logger=logger
             )
 
             output_file = path.join(
@@ -37,6 +37,7 @@ def figure_6(source_folder, replication_folder, device, impl_params, logger):
 
 if __name__ == "__main__":
     device = None
+    quiet = False
 
     images_root = utils.get_images_root()
     source_folder = path.join(images_root, "source")
@@ -58,4 +59,6 @@ if __name__ == "__main__":
                 replication_root, "implementation" if impl_params else "paper"
             )
 
-            figure_6(source_folder, replication_folder, device, impl_params, logger)
+            figure_6(
+                source_folder, replication_folder, device, impl_params, logger, quiet
+            )
