@@ -57,9 +57,9 @@ def gatys_ecker_bethge_2015_style_loss(
         return GramOperator(encoder, score_weight=layer_weight, **gram_loss_kwargs)
 
     return GatysEckerBethge2015StyleLoss(
+        multi_layer_encoder,
         layers,
         get_encoding_op,
-        multi_layer_encoder,
         impl_params=impl_params,
         layer_weights=layer_weights,
         score_weight=score_weight,

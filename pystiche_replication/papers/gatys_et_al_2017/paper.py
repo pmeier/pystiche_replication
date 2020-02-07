@@ -48,25 +48,25 @@ def gatys_et_al_2017_content_loss(
 
 def gatys_et_al_2017_style_loss(
     impl_params: bool = True,
-    layers: Optional[Sequence[str]] = None,
     multi_layer_encoder: Optional[MultiLayerEncoder] = None,
+    layers: Optional[Sequence[str]] = None,
     layer_weights: Optional[Union[str, Sequence[float]]] = None,
     score_weight: float = 1e3,
     **gram_op_kwargs: Any,
 ):
-    if layers is None:
-        layers = ("relu_1_1", "relu_2_1", "relu_3_1", "relu_4_1", "relu_5_1")
-
     if multi_layer_encoder is None:
         multi_layer_encoder = gatys_et_al_2017_multi_layer_encoder()
+
+    if layers is None:
+        layers = ("relu_1_1", "relu_2_1", "relu_3_1", "relu_4_1", "relu_5_1")
 
     def get_encoding_op(encoder, layer_weight):
         return GramOperator(encoder, score_weight=layer_weight, **gram_op_kwargs)
 
     return GatysEtAl2017StyleLoss(
+        multi_layer_encoder,
         layers,
         get_encoding_op,
-        multi_layer_encoder,
         impl_params=impl_params,
         layer_weights=layer_weights,
         score_weight=score_weight,
@@ -76,27 +76,27 @@ def gatys_et_al_2017_style_loss(
 def gatys_et_al_2017_guided_style_loss(
     regions: Sequence[str],
     impl_params: bool = True,
-    region_weights: Union[str, Sequence[float]] = "sum",
     multi_layer_encoder: Optional[MultiLayerEncoder] = None,
     layers: Optional[Sequence[str]] = None,
+    region_weights: Union[str, Sequence[float]] = "sum",
     layer_weights: Optional[Union[str, Sequence[float]]] = None,
     score_weight: float = 1e3,
     **gram_op_kwargs: Any,
 ):
-    if layers is None:
-        layers = ("relu_1_1", "relu_2_1", "relu_3_1", "relu_4_1", "relu_5_1")
-
     if multi_layer_encoder is None:
         multi_layer_encoder = gatys_et_al_2017_multi_layer_encoder()
+
+    if layers is None:
+        layers = ("relu_1_1", "relu_2_1", "relu_3_1", "relu_4_1", "relu_5_1")
 
     def get_encoding_op(encoder, layer_weight):
         return GuidedGramOperator(encoder, score_weight=layer_weight, **gram_op_kwargs)
 
     def get_region_op(region, region_weight):
         return GatysEtAl2017StyleLoss(
+            multi_layer_encoder,
             layers,
             get_encoding_op,
-            multi_layer_encoder,
             impl_params=impl_params,
             layer_weights=layer_weights,
             score_weight=region_weight,

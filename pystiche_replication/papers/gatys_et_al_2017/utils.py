@@ -47,9 +47,9 @@ def gatys_et_al_2017_optimizer(input_image: torch.Tensor) -> Optimizer:
 class GatysEtAl2017StyleLoss(MultiLayerEncodingOperator):
     def __init__(
         self,
+        multi_layer_encoder: MultiLayerEncoder,
         layers: Sequence[str],
         get_encoding_op: Callable[[Encoder, float], EncodingOperator],
-        multi_layer_encoder: MultiLayerEncoder,
         impl_params: bool = True,
         layer_weights: Optional[Union[str, Sequence[float]]] = None,
         score_weight: float = 1e0,
@@ -58,9 +58,9 @@ class GatysEtAl2017StyleLoss(MultiLayerEncodingOperator):
             layer_weights = self.get_default_layer_weights(multi_layer_encoder, layers)
 
         super().__init__(
+            multi_layer_encoder,
             layers,
             get_encoding_op,
-            multi_layer_encoder,
             layer_weights=layer_weights,
             score_weight=score_weight,
         )

@@ -58,12 +58,11 @@ def li_wand_2016_style_loss(
     rotation_step_width: float = 7.5,
     score_weight: Optional[float] = None,
 ):
+    if multi_layer_encoder is None:
+        multi_layer_encoder = li_wand_2016_multi_layer_encoder()
 
     if layers is None:
         layers = ("relu_3_1", "relu_4_1")
-
-    if multi_layer_encoder is None:
-        multi_layer_encoder = li_wand_2016_multi_layer_encoder()
 
     if stride is None:
         stride = 2 if impl_params else 1
@@ -91,9 +90,9 @@ def li_wand_2016_style_loss(
         score_weight = 1e-4 if impl_params else 1e0
 
     return MultiLayerEncodingOperator(
+        multi_layer_encoder,
         layers,
         get_encoding_op,
-        multi_layer_encoder,
         layer_weights=layer_weights,
         score_weight=score_weight,
     )

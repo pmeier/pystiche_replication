@@ -71,9 +71,9 @@ class GatysEckerBethge2015MSEEncodingOperator(MSEEncodingOperator):
 class GatysEckerBethge2015StyleLoss(MultiLayerEncodingOperator):
     def __init__(
         self,
+        multi_layer_encoder: MultiLayerEncoder,
         layers: Sequence[str],
         get_encoding_op: Callable[[Encoder, float], EncodingOperator],
-        multi_layer_encoder: MultiLayerEncoder,
         impl_params: bool = True,
         layer_weights: Optional[Union[str, Sequence[float]]] = None,
         score_weight: float = 1e0,
@@ -87,9 +87,9 @@ class GatysEckerBethge2015StyleLoss(MultiLayerEncodingOperator):
                 layer_weights = "mean"
 
         super().__init__(
+            multi_layer_encoder,
             layers,
             get_encoding_op,
-            multi_layer_encoder,
             layer_weights=layer_weights,
             score_weight=score_weight,
         )
