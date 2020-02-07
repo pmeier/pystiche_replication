@@ -40,7 +40,7 @@ def figure_2(source_folder, replication_folder, device, impl_params, logger, qui
     params = "implementation" if impl_params else "paper"
     for style_image in style_images:
         header = f"Replicating Figure 2 {style_image.label} with {params} parameters"
-        with logger.environ(header):
+        with logger.environment(header):
 
             style_loss_kwargs = {"score_weight": style_image.score_weight}
             criterion = gatys_ecker_bethge_2015_perceptual_loss(
@@ -60,7 +60,7 @@ def figure_2(source_folder, replication_folder, device, impl_params, logger, qui
             output_file = path.join(
                 replication_folder, "fig_2__{}.jpg".format(style_image.label)
             )
-            logger.sep_message(f"Saving result to {output_file}", bottom=False)
+            logger.sep_message(f"Saving result to {output_file}", bottom_sep=False)
             write_image(output_image, output_file)
 
 
@@ -81,7 +81,7 @@ def figure_3(source_folder, results_folder, device, impl_params, logger, quiet):
         row_label = layers[-1].replace("relu_", "Conv")
         column_label = f"{1.0 / score_weight:.0e}"
         header = f"Replicating Figure 3 row {row_label} and column {column_label}"
-        with logger.environ(header):
+        with logger.environment(header):
 
             style_loss_kwargs = {"layers": layers, "score_weight": score_weight}
             criterion = gatys_ecker_bethge_2015_perceptual_loss(
@@ -101,7 +101,7 @@ def figure_3(source_folder, results_folder, device, impl_params, logger, quiet):
             output_file = path.join(
                 results_folder, "fig_3__{}__{}.jpg".format(row_label, column_label)
             )
-            logger.sep_message(f"Saving result to {output_file}", bottom=False)
+            logger.sep_message(f"Saving result to {output_file}", bottom_sep=False)
             write_image(output_image, output_file)
 
 
@@ -115,7 +115,7 @@ if __name__ == "__main__":
         images_root, "results", path.splitext(path.basename(__file__))[0]
     )
     device = utils.parse_device(device)
-    logger = utils.get_default_logger()
+    logger = utils.get_logger()
 
     with utils.log_replication_info(
         logger,

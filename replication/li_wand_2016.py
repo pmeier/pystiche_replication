@@ -23,7 +23,7 @@ def figure_6(source_folder, replication_folder, device, impl_params, logger, qui
         header = (
             f"Replicating the {location} half of figure 6 " f"with {params} parameters"
         )
-        with logger.environ(header):
+        with logger.environment(header):
             output_image = li_wand_2016_nst(
                 content_image, style_image, impl_params, quiet=quiet, logger=logger
             )
@@ -31,7 +31,7 @@ def figure_6(source_folder, replication_folder, device, impl_params, logger, qui
             output_file = path.join(
                 replication_folder, "fig_6__{}.jpg".format(location)
             )
-            logger.sep_message(f"Saving result to {output_file}", level=1)
+            logger.sep_message(f"Saving result to {output_file}", bottom_sep=False)
             write_image(output_image, output_file)
 
 
@@ -45,7 +45,7 @@ if __name__ == "__main__":
         images_root, "results", path.splitext(path.basename(__file__))[0]
     )
     device = utils.parse_device(device)
-    logger = utils.get_default_logger()
+    logger = utils.get_logger()
 
     with utils.log_replication_info(
         logger,

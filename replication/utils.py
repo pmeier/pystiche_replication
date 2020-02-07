@@ -2,15 +2,12 @@ from typing import Union, Optional
 import os
 import contextlib
 import torch
-from pystiche_replication.optim.log import (
-    PysticheLogger,
-    default_logger as get_default_logger,
-)
+from pystiche_replication.optim.log import OptimLogger
 
 __all__ = [
     "get_images_root",
     "parse_device",
-    "get_default_logger",
+    "get_logger",
     "log_replication_info",
 ]
 
@@ -32,9 +29,13 @@ def parse_device(device: Optional[Union[torch.device, str]]) -> torch.device:
         raise ValueError("device should be a torch.device, a str, or None")
 
 
+def get_logger():
+    return OptimLogger()
+
+
 @contextlib.contextmanager
 def log_replication_info(
-    logger: PysticheLogger, title: str, url: str, author: str, year: Union[str, int]
+    optim_logger: OptimLogger, title: str, url: str, author: str, year: Union[str, int]
 ):
     header = "\n".join(
         (
@@ -46,5 +47,5 @@ def log_replication_info(
             f"in {str(year)}",
         )
     )
-    with logger.environ(header):
+    with optim_logger.environment(header):
         yield

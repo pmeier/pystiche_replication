@@ -19,12 +19,12 @@ import utils
 def replicate_figure(logger, figure, impl_params):
     params = "implementation" if impl_params else "paper"
     header = f"Replicating {figure} with {params} parameters"
-    with logger.environ(header):
+    with logger.environment(header):
         yield
 
 
 def log_saving_info(logger, output_file):
-    logger.sep_message(f"Saving result to {output_file}", bottom=False)
+    logger.sep_message(f"Saving result to {output_file}", bottom_sep=False)
 
 
 def figure_2(
@@ -154,7 +154,7 @@ def figure_3(source_folder, replication_folder, device, impl_params, logger, qui
     def figure_3_c(content_image, style_image):
         with replicate_figure(logger, "3 (c)", impl_params):
             output_image = gatys_et_al_2017_nst(
-                content_image, style_image, impl_params=impl_params, quiet=True
+                content_image, style_image, impl_params=impl_params, quiet=quiet
             )
 
             output_file = path.join(replication_folder, "fig_3__c.jpg")
@@ -171,7 +171,7 @@ def figure_3(source_folder, replication_folder, device, impl_params, logger, qui
 
         with replicate_figure(logger, "3 (d)", impl_params):
             output_luminance = gatys_et_al_2017_nst(
-                content_luminance, style_luminance, impl_params=impl_params, quiet=True
+                content_luminance, style_luminance, impl_params=impl_params, quiet=quiet
             )
             output_luminance = torch.mean(output_luminance, dim=1, keepdim=True)
             output_chromaticity = resize(
@@ -190,7 +190,7 @@ def figure_3(source_folder, replication_folder, device, impl_params, logger, qui
 
         with replicate_figure(logger, "3 (e)", impl_params):
             output_image = gatys_et_al_2017_nst(
-                content_image, style_image, impl_params=impl_params, quiet=True
+                content_image, style_image, impl_params=impl_params, quiet=quiet
             )
 
             output_file = path.join(replication_folder, "fig_3__e.jpg")
@@ -221,7 +221,7 @@ if __name__ == "__main__":
         images_root, "results", path.splitext(path.basename(__file__))[0]
     )
     device = utils.parse_device(device)
-    logger = utils.get_default_logger()
+    logger = utils.get_logger()
 
     with utils.log_replication_info(
         logger,

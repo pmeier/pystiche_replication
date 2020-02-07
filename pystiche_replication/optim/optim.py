@@ -1,6 +1,5 @@
-from typing import Any, Union, Optional, Iterable, Tuple, Callable
+from typing import Union, Optional, Iterable, Tuple, Callable
 import time
-import logging
 import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader
@@ -10,10 +9,9 @@ from pystiche.image import extract_aspect_ratio, extract_image_size
 from pystiche.pyramid import ImagePyramid
 from pystiche.pyramid.level import PyramidLevel
 from .log import (
-    default_logger,
+    OptimLogger,
     default_image_optim_log_fn,
     default_pyramid_level_header,
-    # default_image_pyramid_optim_log_fn,
     default_transformer_optim_log_fn,
 )
 
@@ -30,7 +28,7 @@ def default_image_optim_loop(
     preprocessor: nn.Module = None,
     postprocessor: nn.Module = None,
     quiet: bool = False,
-    logger: Optional[logging.Logger] = None,
+    logger: Optional[OptimLogger] = None,
     log_fn: Optional[
         Callable[[int, Union[torch.Tensor, pystiche.LossDict]], None]
     ] = None,
@@ -42,10 +40,10 @@ def default_image_optim_loop(
         num_steps = range(1, num_steps + 1)
 
     if logger is None:
-        logger = default_logger()
+        logger = OptimLogger()
 
     if log_fn is None:
-        log_fn = default_image_optim_log_fn(logger=logger)
+        log_fn = default_image_optim_log_fn(optim_logger=logger)
 
     if preprocessor:
         with torch.no_grad():
@@ -83,11 +81,10 @@ def default_image_pyramid_optim_loop(
     preprocessor: nn.Module = None,
     postprocessor: nn.Module = None,
     quiet: bool = False,
-    logger: Optional[logging.Logger] = None,
+    logger: Optional[OptimLogger] = None,
     get_pyramid_level_header: Optional[
         Callable[[int, PyramidLevel, Tuple[int, int]], str]
     ] = None,
-    # log_fn: Optional[Callable[[int, PyramidLevel, Tuple[int, int]], None]] = None,
     log_fn: Optional[
         Callable[[int, Union[torch.Tensor, pystiche.LossDict]], None]
     ] = None,
@@ -97,7 +94,7 @@ def default_image_pyramid_optim_loop(
         get_optimizer = default_image_optimizer
 
     if logger is None:
-        logger = default_logger()
+        logger = OptimLogger()
 
     if get_pyramid_level_header is None:
         get_pyramid_level_header = default_pyramid_level_header
@@ -126,7 +123,7 @@ def default_image_pyramid_optim_loop(
         else:
             input_image_size = extract_image_size(input_image)
             header = get_pyramid_level_header(num, level, input_image_size)
-            with logger.environ(header):
+            with logger.environment(header):
                 output_image = image_optim_loop(input_image)
 
     return output_image
@@ -144,7 +141,7 @@ def default_transformer_optim_loop(
     criterion_update_fn: Callable[[torch.Tensor, nn.ModuleDict], None],
     get_optimizer: Optional[Callable[[nn.Module], Optimizer]] = None,
     quiet: bool = False,
-    logger: Optional[logging.Logger] = None,
+    logger: Optional[OptimLogger] = None,
     log_fn: Optional[
         Callable[[int, Union[torch.Tensor, pystiche.LossDict], float, float], None]
     ] = None,
@@ -153,7 +150,7 @@ def default_transformer_optim_loop(
         get_optimizer = default_transformer_optimizer
 
     if logger is None:
-        logger = default_logger()
+        logger = OptimLogger()
 
     if log_fn is None:
         log_fn = default_transformer_optim_log_fn(logger, len(image_loader))
