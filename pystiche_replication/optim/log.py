@@ -131,21 +131,25 @@ def default_transformer_optim_log_fn(
     if log_freq is None:
         log_freq = min(round(1e-3 * num_batches) * 10, 50)
 
-    meters = [LossMeter(show_avg=show_running_means)]
+    window_size = min(10 * log_freq, 1000)
+
+    meters = [LossMeter(show_avg=show_running_means, window_size=window_size)]
     if show_loading_velocity:
         meters.append(
             AverageMeter(
                 name="loading_velocity",
-                show_avg=show_running_means,
                 fmt="{:3.1f} img/s",
+                show_avg=show_running_means,
+                window_size=window_size,
             )
         )
     if show_processing_velocity:
         meters.append(
             AverageMeter(
                 name="processing_velocity",
-                show_avg=show_running_means,
                 fmt="{:3.1f} img/s",
+                show_avg=show_running_means,
+                window_size=window_size,
             )
         )
 
