@@ -4,8 +4,9 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 install_requires = (
-    "torch",
     "numpy",
+    "torch",
+    "torchvision",
     "pystiche@https://github.com/pmeier/pystiche/archive/master.zip",
 )
 
