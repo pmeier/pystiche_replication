@@ -1,0 +1,2 @@
+pre-commit
+git+https://github.com/pmeier/pystiche@master
